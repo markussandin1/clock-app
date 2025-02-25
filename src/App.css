@@ -1,72 +1,58 @@
-/* Övergripande layout */
-
 @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap');
 
-.App {
-  max-width: 900px;
-  margin: 40px auto;
-  padding: 20px;
+/* Nollställ box-sizing för en mer förutsägbar layout */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* BODY och HTML fyller hela skärmen, bra för mobil */
+html, body {
+  width: 100%;
+  height: 100%;
   background-color: #f5f9ff;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  font-family: 'Fredoka One', sans-serif;
+}
+
+/* ---------- MOBILE FIRST STILAR ---------- */
+
+/* Grundcontainer för appen */
+.App {
+  width: 100%;
+  max-width: 600px;     /* På mobil kan 600px räcka som maxbredd */
+  margin: 0 auto;
+  padding: 1rem;
   text-align: center;
-  font-family: 'Fredoka One', cursive;
-
-
-  .normal-text {
-    font-weight: 400;
-    font-style: normal;
-  }
-  
-  .bold-text {
-    font-weight: 700;
-  }
-  
-  .italic-text {
-    font-style: italic;
-  }
 }
 
 /* Header */
 .header {
-  margin-bottom: 20px;
+  margin-bottom: 1rem;
 }
 
 .title {
-  font-size: 2.8em;
-  font-weight: bold;
+  font-size: 1.8rem;  /* Mindre storlek för mobil */
   color: #0077cc;
-  margin-bottom: 10px;
+  margin-bottom: 0.5rem;
 }
 
-/* Information (nivå, etc.) */
-.info {
-  font-size: 1.5em;
-  color: #333;
-}
-
-/* Mål-tid: större och tydlig */
-.target-time {
-  font-size: 2.5em;
-  font-weight: bold;
-  margin: 20px 0;
-  color: #0056b3;
-}
-
-/* Nivåväljar-panel */
+/* Nivåväljar-panel: flex med wrap för att undvika överlapp */
 .level-selector {
-  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;   /* Mellanrum mellan knapparna */
+  margin-bottom: 1rem;
 }
 
 .level-selector button {
-  margin: 0 10px;
-  padding: 20px 30px;
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.4em;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
   background-color: #007bff;
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
 }
@@ -80,28 +66,32 @@
   background-color: #28a745;
 }
 
-/* Klockan */
+/* Klock-container: en mindre cirkel på mobil */
 .clock-container {
   position: relative;
-  width: 600px;
-  height: 600px;
-  margin: 20px auto;
-  border: 8px solid #333;
+  width: 80vw;          /* 80% av skärmens bredd */
+  max-width: 300px;     /* men aldrig mer än 300px */
+  height: 80vw;
+  max-height: 300px;
+  margin: 0 auto 1rem auto;
+  border: 4px solid #333;
   border-radius: 50%;
   background-color: #fff;
+  overflow: hidden;     /* om något sticker ut */
 }
 
-/* Klocknummer */
+/* Klockans siffror: mindre storlek så de inte överlappar */
 .clock-number {
   position: absolute;
-  font-size: 40px;
+  font-size: 6vw;    /* 3% av viewportens bredd */
+  max-width: 50px;   /* en övre gräns */
+  color: #0077cc;
   font-weight: bold;
   transform: translate(-50%, -50%);
   user-select: none;
-  color: #0077cc;
 }
 
-/* Visare */
+/* Visare: anpassade för en mindre klocka */
 .hour-hand,
 .minute-hand {
   position: absolute;
@@ -112,26 +102,34 @@
 }
 
 .hour-hand {
-  width: 12px;
-  height: 140px;
+  width: 3%;          /* i förhållande till .clock-container */
+  height: 30%;
   background-color: #333;
-  border-radius: 6px;
+  border-radius: 0.5rem;
 }
 
 .minute-hand {
-  width: 8px;
-  height: 200px;
+  width: 2%;
+  height: 39%;
   background-color: #e60000;
-  border-radius: 4px;
+  border-radius: 0.5rem;
+}
+
+/* Mål-tid */
+.target-time {
+  font-size: 1.4rem;
+  font-weight: bold;
+  color: #0056b3;
+  margin: 1rem 0;
 }
 
 /* Bekräfta-knappen */
 .confirm-button {
-  margin-top: 20px;
-  padding: 20px 40px;
-  font-size: 32px;
-  border: 4px solid #333;
-  border-radius: 16px;
+  margin-top: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.2rem;
+  border: 2px solid #333;
+  border-radius: 1rem;
   background-color: #f0f0f0;
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s;
@@ -142,15 +140,15 @@
   transform: scale(1.05);
 }
 
-/* Feedback-meddelandet */
+/* Feedback: mindre text på mobil */
 .feedback {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%) scale(0.5);
-  padding: 30px 50px;
-  border-radius: 16px;
-  font-size: 36px;
+  padding: 1rem 1.5rem;
+  border-radius: 1rem;
+  font-size: 1.2rem;
   font-weight: bold;
   animation: fadeInOut 2s forwards;
   pointer-events: none;
@@ -186,9 +184,70 @@
   color: #fff;
 }
 
-/* Stjärnräknaren */
+/* Stjärnräknare */
 .star-counter {
-  margin-top: 40px;
-  font-size: 32px;
+  margin-top: 1rem;
+  font-size: 1.2rem;
   color: #ffcc00;
+}
+
+/* ---------- STÖRRE SKÄRMAR (tablets & desktops) ---------- */
+@media (min-width: 768px) {
+  .App {
+    max-width: 600px;
+    padding: 2rem;
+  }
+  
+  .title {
+    font-size: 2.2rem;
+  }
+  
+  .level-selector button {
+    font-size: 1.2rem;
+    padding: 0.75rem 1.5rem;
+  }
+  
+  .clock-container {
+    width: 350px;
+    height: 350px;
+    border: 6px solid #333;
+    margin-bottom: 1.5rem;
+  }
+  
+  .clock-number {
+    font-size: 2rem;
+  }
+  
+  .hour-hand {
+    width: 8px;
+    height: 110px;
+    border-radius: 6px;
+  }
+  
+  .minute-hand {
+    width: 6px;
+    height: 150px;
+    border-radius: 4px;
+  }
+  
+  .target-time {
+    font-size: 1.8rem;
+    margin: 1rem 0;
+  }
+  
+  .confirm-button {
+    font-size: 1.4rem;
+    padding: 1rem 2rem;
+    margin-top: 1rem;
+  }
+  
+  .feedback {
+    font-size: 1.6rem;
+    padding: 1.25rem 2rem;
+  }
+  
+  .star-counter {
+    font-size: 1.4rem;
+    margin-top: 1.5rem;
+  }
 }

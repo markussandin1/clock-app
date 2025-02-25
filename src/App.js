@@ -93,6 +93,7 @@ function App() {
     return angle / 6;
   }
   
+  // Hantera mus-/pekrörelser
   function handleMouseMove(e) {
     if (!dragging) return;
     const rect = clockRef.current.getBoundingClientRect();
@@ -139,9 +140,11 @@ function App() {
     setDragging(null);
   }
   
+  // Ritar siffrorna runt klockans mitt.
+  // OBS! Sänkt 'radius' till 100 (eller 80) så att siffrorna inte hamnar utanför på små skärmar.
   function renderNumbers() {
     const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
-    const radius = 240;
+    const radius = 130; // Justera om siffrorna hamnar för nära mitten eller kanten
     return numbers.map(num => {
       const angleDeg = num * 30 - 90;
       const angleRad = (angleDeg * Math.PI) / 180;
@@ -195,7 +198,6 @@ function App() {
         )}
       </div>
       
-      {/* Placera mål-tiden nära bekräftaknappen */}
       <div className="target-time">Mål: {targetTime}</div>
       <button className="confirm-button" onClick={checkAnswer}>Bekräfta</button>
       
