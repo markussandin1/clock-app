@@ -45,27 +45,27 @@ function formatSwedishTime(timeStr) {
   return timeStr;
 }
 
+// Hjälpfunktion: omvandla currentTime till ett kontinuerligt värde i minuter
+function timeToMinutes(time) {
+  return time.hour * 60 + time.minute;
+}
+
 function App() {
-  // Nivå (1 till 4) – startar på 1
   const [level, setLevel] = useState(1);
-  // currentTime: hour (1-12) och minute (heltal)
   const [currentTime, setCurrentTime] = useState({ hour: 3, minute: 0 });
-  // dragging: "minute" eller "hour"
   const [dragging, setDragging] = useState(null);
-  // Feedback och feedbackType
   const [feedback, setFeedback] = useState("");
   const [feedbackType, setFeedbackType] = useState("");
-  // Mål-tid som sträng "HH:MM"
   const [targetTime, setTargetTime] = useState(generateTargetTime(1));
-  // Antal stjärnor
   const [stars, setStars] = useState(0);
-  // Tolerans (grader)
+  // Ny state för att styra animationen av stjärnan
+  const [showAnimatedStar, setShowAnimatedStar] = useState(false);
   const tolerance = 10;
   
   const clockRef = useRef(null);
-  // Refs för minutdragning vid nivå 3 och 4
-  const minuteDragStartRef = useRef(0);
-  const dragStartAngleRef = useRef(0);
+  // Dessa refs används för att hantera den ackumulerade tiden vid nivå 3/4
+  const totalMinutesRef = useRef(0);
+  const lastAngleRef = useRef(0);
   
   // AudioRefs för ljudeffekter
   const correctAudioRef = useRef(null);
@@ -75,7 +75,6 @@ function App() {
   const minuteAngle = currentTime.minute * 6;
   const hourAngle = ((currentTime.hour % 12) * 30) + ((currentTime.minute / 60) * 30);
   
-  // Generera en slumpmässig tid beroende på nivå
   function generateTargetTime(level) {
     const hour = Math.floor(Math.random() * 12) + 1;
     let minute = 0;
@@ -93,7 +92,6 @@ function App() {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
   
-  // Beräkna förväntade vinklar utifrån mål-tiden
   function getExpectedAngles(timeStr) {
     const [hourStr, minuteStr] = timeStr.split(':');
     const targetHour = Number(hourStr);
@@ -103,47 +101,41 @@ function App() {
     return { expectedHourAngle, expectedMinuteAngle };
   }
   
-  // Kontrollera svaret och spela upp ljudeffekter
   function checkAnswer() {
     const { expectedHourAngle, expectedMinuteAngle } = getExpectedAngles(targetTime);
     const diffHour = circularDifference(normalize(hourAngle), normalize(expectedHourAngle));
     const diffMinute = circularDifference(normalize(minuteAngle), normalize(expectedMinuteAngle));
     
     if (diffHour <= tolerance && diffMinute <= tolerance) {
-      // Spela upp rätt ljud
-      if (correctAudioRef.current) {
-        correctAudioRef.current.play();
-      }
+      if (correctAudioRef.current) correctAudioRef.current.play();
       setFeedback("Rätt! Bra jobbat!");
       setFeedbackType("success");
       setStars(prev => prev + 1);
+      // Visa den animerade stjärnan
+      setShowAnimatedStar(true);
+      setTimeout(() => setShowAnimatedStar(false), 1000);
       setTimeout(() => setFeedback(""), 2000);
       setTargetTime(generateTargetTime(level));
       setCurrentTime({ hour: 3, minute: 0 });
     } else {
-      // Spela upp fel ljud
-      if (wrongAudioRef.current) {
-        wrongAudioRef.current.play();
-      }
+      if (wrongAudioRef.current) wrongAudioRef.current.play();
       setFeedback("Försök igen!");
       setFeedbackType("error");
       setTimeout(() => setFeedback(""), 2000);
     }
   }
   
-  // Hantera nivåval
   function handleLevelSelect(newLevel) {
     setLevel(newLevel);
     setTargetTime(generateTargetTime(newLevel));
     setCurrentTime({ hour: 3, minute: 0 });
   }
   
-  // Hjälpfunktion: konvertera vinkel till minut (för nivå 1 och 2)
+  // Hjälpfunktion för nivå 1 och 2
   function angleToMinute(angle) {
     return angle / 6;
   }
   
-  // Hantera rörelse (mus och touch)
   function handleMouseMove(e) {
     if (!dragging) return;
     
@@ -162,28 +154,29 @@ function App() {
     const centerY = rect.top + rect.height / 2;
     const dx = clientX - centerX;
     const dy = clientY - centerY;
-    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
-    angle += 90;
-    if (angle < 0) angle += 360;
+    let currentAngle = Math.atan2(dy, dx) * (180 / Math.PI);
+    currentAngle += 90;
+    if (currentAngle < 0) currentAngle += 360;
     
     if (dragging === "minute") {
       if (level === 3 || level === 4) {
-        let deltaAngle = angle - dragStartAngleRef.current;
+        let deltaAngle = currentAngle - lastAngleRef.current;
         if (deltaAngle > 180) deltaAngle -= 360;
         if (deltaAngle < -180) deltaAngle += 360;
-        const deltaMinutes = deltaAngle / 6;
-        let total = minuteDragStartRef.current + deltaMinutes;
-        total = ((total % 720) + 720) % 720;
-        let newHour = Math.floor(total / 60) % 12;
-        newHour = newHour === 0 ? 12 : newHour;
+        totalMinutesRef.current += deltaAngle / 6;
+        lastAngleRef.current = currentAngle;
+        
+        let total = totalMinutesRef.current;
+        let continuousHour = Math.floor(total / 60);
+        let displayHour = (continuousHour % 12) === 0 ? 12 : (continuousHour % 12);
         const newMinute = Math.round(total % 60);
-        setCurrentTime({ hour: newHour, minute: newMinute });
+        setCurrentTime({ hour: displayHour, minute: newMinute });
       } else {
-        const newMinute = angleToMinute(angle);
+        const newMinute = angleToMinute(currentAngle);
         setCurrentTime(prev => ({ ...prev, minute: newMinute }));
       }
     } else if (dragging === "hour") {
-      let newHour = (angle - ((currentTime.minute / 60) * 30)) / 30;
+      let newHour = (currentAngle - ((currentTime.minute / 60) * 30)) / 30;
       if (level === 1) {
         newHour = Math.round(newHour);
       } else if (level === 2) {
@@ -193,7 +186,6 @@ function App() {
     }
   }
   
-  // Modifierad handleMouseDown för att spara startläget vid minutdragning
   function handleMouseDown(hand, e) {
     setDragging(hand);
     if (hand === "minute" && (level === 3 || level === 4)) {
@@ -210,13 +202,13 @@ function App() {
       const centerY = rect.top + rect.height / 2;
       let startAngle = Math.atan2(clientY - centerY, clientX - centerX) * (180 / Math.PI);
       startAngle += 90;
-      if(startAngle < 0) startAngle += 360;
-      dragStartAngleRef.current = startAngle;
-      minuteDragStartRef.current = ((currentTime.hour % 12) * 60) + currentTime.minute;
+      if (startAngle < 0) startAngle += 360;
+      
+      totalMinutesRef.current = timeToMinutes(currentTime);
+      lastAngleRef.current = startAngle;
     }
   }
   
-  // Vid släpp snäpps tiden beroende på nivå
   function handleMouseUp() {
     if (dragging === "minute") {
       if (level === 1) {
@@ -224,25 +216,21 @@ function App() {
       } else if (level === 2) {
         setCurrentTime(prev => ({ ...prev, minute: 30 }));
       } else if (level === 3) {
-        setCurrentTime(prev => {
-          const total = ((prev.hour % 12) * 60) + prev.minute;
-          const snapped = Math.round(total / 15) * 15;
-          const norm = ((snapped % 720) + 720) % 720;
-          let newHour = Math.floor(norm / 60) % 12;
-          newHour = newHour === 0 ? 12 : newHour;
-          const newMinute = norm % 60;
-          return { hour: newHour, minute: newMinute };
-        });
+        let total = totalMinutesRef.current;
+        const snapped = Math.round(total / 15) * 15;
+        totalMinutesRef.current = snapped;
+        let continuousHour = Math.floor(snapped / 60);
+        let displayHour = (continuousHour % 12) === 0 ? 12 : (continuousHour % 12);
+        const newMinute = snapped % 60;
+        setCurrentTime({ hour: displayHour, minute: newMinute });
       } else if (level === 4) {
-        setCurrentTime(prev => {
-          const total = ((prev.hour % 12) * 60) + prev.minute;
-          const snapped = Math.round(total / 5) * 5;
-          const norm = ((snapped % 720) + 720) % 720;
-          let newHour = Math.floor(norm / 60) % 12;
-          newHour = newHour === 0 ? 12 : newHour;
-          const newMinute = norm % 60;
-          return { hour: newHour, minute: newMinute };
-        });
+        let total = totalMinutesRef.current;
+        const snapped = Math.round(total / 5) * 5;
+        totalMinutesRef.current = snapped;
+        let continuousHour = Math.floor(snapped / 60);
+        let displayHour = (continuousHour % 12) === 0 ? 12 : (continuousHour % 12);
+        const newMinute = snapped % 60;
+        setCurrentTime({ hour: displayHour, minute: newMinute });
       }
     } else if (dragging === "hour") {
       if (level === 1) {
@@ -279,11 +267,7 @@ function App() {
   }
   
   return (
-    <div className="App"
-         onMouseMove={handleMouseMove}
-         onTouchMove={handleMouseMove}
-         onMouseUp={handleMouseUp}
-         onTouchEnd={handleMouseUp}>
+    <div className="App">
       <div className="header">
         <div className="title">Lär dig klockan</div>
       </div>
@@ -295,7 +279,11 @@ function App() {
         <button onClick={() => handleLevelSelect(4)} className={level === 4 ? "active" : ""}>Svårast</button>
       </div>
       
-      <div className="clock-container" ref={clockRef}>
+      <div className="clock-container" ref={clockRef}
+           onMouseMove={handleMouseMove}
+           onTouchMove={handleMouseMove}
+           onMouseUp={handleMouseUp}
+           onTouchEnd={handleMouseUp}>
         {renderNumbers()}
         <div
           className="hour-hand"
@@ -327,7 +315,10 @@ function App() {
         ))}
       </div>
       
-      {/* Ljudspelare för ljudeffekter */}
+      {showAnimatedStar && (
+        <div className="animated-star">⭐</div>
+      )}
+      
       <audio ref={correctAudioRef} src="/sounds/correct.mp3" />
       <audio ref={wrongAudioRef} src="/sounds/wrong.mp3" />
     </div>

@@ -327,3 +327,37 @@ html, body {
     margin-top: 2rem;
   }
 }
+/* Se till att .App är positionerad relativt för att absolut positionerade element ska fungera */
+.App {
+  position: relative;
+}
+
+/* Animerad stjärna */
+.animated-star {
+  position: absolute;
+  top: 50%; /* Startposition – justera efter behov */
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  pointer-events: none;
+  z-index: 100;
+  animation: dropStar 1s ease-out forwards;
+}
+
+/* Keyframes för att animera stjärnan från klockan till stjärnräknaren */
+@keyframes dropStar {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  40% {
+    transform: translate(calc(-50% + 20px), calc(-50% + 100px)) scale(1.2);
+  }
+  50% {
+    transform: translate(calc(-50% + 20px), calc(-50% + 100px)) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + 60px), calc(-50% + 200px)) scale(0.5);
+  }
+}
