@@ -11,29 +11,20 @@ function circularDifference(a, b) {
 }
 
 function App() {
-  // Nivå (1 till 4) – startar på 1
   const [level, setLevel] = useState(1);
-  // currentTime: hour (flyttal) och minute (heltal)
   const [currentTime, setCurrentTime] = useState({ hour: 3, minute: 0 });
-  // dragging: "minute" eller "hour"
   const [dragging, setDragging] = useState(null);
-  // Feedback
   const [feedback, setFeedback] = useState("");
   const [feedbackType, setFeedbackType] = useState("");
-  // Mål-tid som sträng "HH:MM"
   const [targetTime, setTargetTime] = useState(generateTargetTime(1));
-  // Antal stjärnor
   const [stars, setStars] = useState(0);
-  // Tolerans (grader)
   const tolerance = 10;
   
   const clockRef = useRef(null);
   
-  // Beräkna visarnas vinklar från currentTime
   const minuteAngle = currentTime.minute * 6;
   const hourAngle = ((currentTime.hour % 12) * 30) + ((currentTime.minute / 60) * 30);
   
-  // Generera en slumpmässig tid beroende på nivå
   function generateTargetTime(level) {
     const hour = Math.floor(Math.random() * 12) + 1;
     let minute = 0;
@@ -51,7 +42,6 @@ function App() {
     return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
   }
   
-  // Beräkna förväntade vinklar utifrån mål-tiden
   function getExpectedAngles(timeStr) {
     const [hourStr, minuteStr] = timeStr.split(':');
     const targetHour = Number(hourStr);
@@ -61,7 +51,6 @@ function App() {
     return { expectedHourAngle, expectedMinuteAngle };
   }
   
-  // Kontrollera svaret
   function checkAnswer() {
     const { expectedHourAngle, expectedMinuteAngle } = getExpectedAngles(targetTime);
     const diffHour = circularDifference(normalize(hourAngle), normalize(expectedHourAngle));
@@ -81,26 +70,33 @@ function App() {
     }
   }
   
-  // Hantera nivåval
   function handleLevelSelect(newLevel) {
     setLevel(newLevel);
     setTargetTime(generateTargetTime(newLevel));
     setCurrentTime({ hour: 3, minute: 0 });
   }
   
-  // Hjälpfunktion: konvertera vinkel till minut (utan snäppning under drag)
   function angleToMinute(angle) {
     return angle / 6;
   }
   
-  // Hantera mus-/pekrörelser
-  function handleMouseMove(e) {
+  // Gemensam funktion för att hämta koordinater, anpassad för touch eller mus
+  function getCoordinates(e) {
+    // Om touch events används, använd e.touches[0]
+    if (e.touches && e.touches.length > 0) {
+      return { clientX: e.touches[0].clientX, clientY: e.touches[0].clientY };
+    }
+    return { clientX: e.clientX, clientY: e.clientY };
+  }
+  
+  function handleMove(e) {
     if (!dragging) return;
+    const { clientX, clientY } = getCoordinates(e);
     const rect = clockRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    const dx = e.clientX - centerX;
-    const dy = e.clientY - centerY;
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
     let angle = Math.atan2(dy, dx) * (180 / Math.PI);
     angle += 90;
     if (angle < 0) angle += 360;
@@ -119,12 +115,13 @@ function App() {
     }
   }
   
-  function handleMouseDown(hand) {
+  function handleStart(hand, e) {
     setDragging(hand);
+    // Förhindra standard beteende (scrollning, zoom, etc.)
+    e.preventDefault();
   }
   
-  // Vid släpp, snäpp minutvisaren till närmaste 5-minutersintervall samt timvisaren beroende på nivå
-  function handleMouseUp() {
+  function handleEnd() {
     if (dragging === "minute") {
       setCurrentTime(prev => ({
         ...prev,
@@ -140,11 +137,9 @@ function App() {
     setDragging(null);
   }
   
-  // Ritar siffrorna runt klockans mitt.
-  // OBS! Sänkt 'radius' till 100 (eller 80) så att siffrorna inte hamnar utanför på små skärmar.
   function renderNumbers() {
     const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
-    const radius = 130; // Justera om siffrorna hamnar för nära mitten eller kanten
+    const radius = 100; // Justera så att siffrorna hamnar bra inom klockan
     return numbers.map(num => {
       const angleDeg = num * 30 - 90;
       const angleRad = (angleDeg * Math.PI) / 180;
@@ -167,7 +162,11 @@ function App() {
   }
   
   return (
-    <div className="App" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+    <div className="App"
+         onMouseMove={handleMove}
+         onTouchMove={handleMove}
+         onMouseUp={handleEnd}
+         onTouchEnd={handleEnd}>
       <div className="header">
         <div className="title">Lär dig klockan</div>
       </div>
@@ -184,12 +183,14 @@ function App() {
         <div
           className="hour-hand"
           style={{ transform: `translate(-50%, -100%) rotate(${hourAngle}deg)` }}
-          onMouseDown={() => handleMouseDown("hour")}
+          onMouseDown={(e) => { handleStart("hour", e); }}
+          onTouchStart={(e) => { handleStart("hour", e); }}
         />
         <div
           className="minute-hand"
           style={{ transform: `translate(-50%, -100%) rotate(${minuteAngle}deg)` }}
-          onMouseDown={() => handleMouseDown("minute")}
+          onMouseDown={(e) => { handleStart("minute", e); }}
+          onTouchStart={(e) => { handleStart("minute", e); }}
         />
         {feedback && (
           <div className={`feedback ${feedbackType}`}>
