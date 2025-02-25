@@ -20,7 +20,7 @@ html, body {
 /* Grundcontainer för appen */
 .App {
   width: 100%;
-  max-width: 600px;     /* På mobil kan 600px räcka som maxbredd */
+  max-width: 600px;
   margin: 0 auto;
   padding: 1rem;
   text-align: center;
@@ -32,17 +32,17 @@ html, body {
 }
 
 .title {
-  font-size: 1.8rem;  /* Mindre storlek för mobil */
+  font-size: 1.8rem;
   color: #0077cc;
   margin-bottom: 0.5rem;
 }
 
-/* Nivåväljar-panel: flex med wrap för att undvika överlapp */
+/* Nivåväljar-panel */
 .level-selector {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 0.5rem;   /* Mellanrum mellan knapparna */
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
 
@@ -66,7 +66,7 @@ html, body {
   background-color: #28a745;
 }
 
-/* Klock-container: en mindre cirkel på mobil */
+/* Klock-container */
 .clock-container {
   position: relative;
   width: 80vw;
@@ -78,21 +78,21 @@ html, body {
   border-radius: 50%;
   background-color: #fff;
   overflow: hidden;
-  touch-action: none; /* Hindrar scroll/zoom under drag */
+  touch-action: none;
 }
 
-/* Klockans siffror: mindre storlek så de inte överlappar */
+/* Klockans siffror */
 .clock-number {
   position: absolute;
-  font-size: 6vw;    /* 3% av viewportens bredd */
-  max-width: 50px;   /* en övre gräns */
+  font-size: 6vw;
+  max-width: 50px;
   color: #0077cc;
   font-weight: bold;
   transform: translate(-50%, -50%);
   user-select: none;
 }
 
-/* Visare: anpassade för en mindre klocka */
+/* Visare */
 .hour-hand,
 .minute-hand {
   position: absolute;
@@ -100,11 +100,11 @@ html, body {
   top: 50%;
   transform-origin: 50% 100%;
   cursor: pointer;
-  touch-action: none; /* Förhindrar standard touch-beteende */
+  touch-action: none;
 }
 
 .hour-hand {
-  width: 3%;          /* i förhållande till .clock-container */
+  width: 3%;
   height: 30%;
   background-color: #333;
   border-radius: 0.5rem;
@@ -117,6 +117,19 @@ html, body {
   border-radius: 0.5rem;
 }
 
+/* Pseudo-element för att göra att visarna kan fånga touch */
+.hour-hand::before,
+.minute-hand::before {
+  content: "";
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  right: -15px;
+  bottom: -15px;
+  background-color: transparent;
+  pointer-events: auto;
+}
+
 /* Mål-tid */
 .target-time {
   font-size: 1.4rem;
@@ -125,7 +138,7 @@ html, body {
   margin: 1rem 0;
 }
 
-/* Bekräfta-knappen */
+/* Bekräfta-knapp */
 .confirm-button {
   margin-top: 0.5rem;
   padding: 0.75rem 1.5rem;
@@ -142,7 +155,7 @@ html, body {
   transform: scale(1.05);
 }
 
-/* Feedback: mindre text på mobil */
+/* Feedback */
 .feedback {
   position: absolute;
   top: 50%;
@@ -254,7 +267,7 @@ html, body {
   }
 }
 
-/* ----- STÖRRE SKÄRMAR (DESKTOP) ----- */
+/* ---------- STÖRRE SKÄRMAR (DESKTOP) ---------- */
 @media (min-width: 1024px) {
   .App {
     max-width: 900px;
@@ -279,7 +292,7 @@ html, body {
   }
   
   .clock-number {
-    font-size: 2rem; /* Justera efter behov */
+    font-size: 2rem;
     max-width: none;
   }
   
@@ -313,17 +326,4 @@ html, body {
     font-size: 2rem;
     margin-top: 2rem;
   }
-}
-.hour-hand::before,
-.minute-hand::before {
-  content: "";
-  position: absolute;
-  top: -15px;
-  left: -15px;
-  right: -15px;
-  bottom: -15px;
-  /* Vi lämnar bakgrunden transparent */
-  background-color: transparent;
-  /* Låt pseudo-elementet vara klickbart */
-  pointer-events: auto;
 }

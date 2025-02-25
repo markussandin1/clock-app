@@ -36,7 +36,6 @@ function formatSwedishTime(timeStr) {
   } else if (minute === 15) {
     return `kvart över ${hourWords[hour]}`;
   } else if (minute === 30) {
-    // Exempel: "03:30" blir "halv fyra"
     let nextHour = (hour % 12) + 1;
     return `halv ${hourWords[nextHour]}`;
   } else if (minute === 45) {
@@ -129,13 +128,26 @@ function App() {
     return angle / 6;
   }
   
+  // Uppdaterad hantering av mus- och touch-händelser
   function handleMouseMove(e) {
     if (!dragging) return;
+    
+    let clientX, clientY;
+    // Använd touch-koordinater om de finns
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+      e.preventDefault(); // Förhindrar scroll/zoom vid touch
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
     const rect = clockRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    const dx = e.clientX - centerX;
-    const dy = e.clientY - centerY;
+    const dx = clientX - centerX;
+    const dy = clientY - centerY;
     let angle = Math.atan2(dy, dx) * (180 / Math.PI);
     angle += 90;
     if (angle < 0) angle += 360;
@@ -158,7 +170,7 @@ function App() {
     setDragging(hand);
   }
   
-  // Vid släpp, snäpp minutvisaren till närmaste 5-minutersintervall samt timvisaren beroende på nivå
+  // Vid släpp: snäpp minutvisaren till närmaste 5-minutersintervall och, beroende på nivå, snäpp timvisaren
   function handleMouseUp() {
     if (dragging === "minute") {
       setCurrentTime(prev => ({
@@ -221,14 +233,14 @@ function App() {
         <div
           className="hour-hand"
           style={{ transform: `translate(-50%, -100%) rotate(${hourAngle}deg)` }}
-          onMouseDown={(e) => handleMouseDown("hour")}
-          onTouchStart={(e) => handleMouseDown("hour")}
+          onMouseDown={() => handleMouseDown("hour")}
+          onTouchStart={() => handleMouseDown("hour")}
         />
         <div
           className="minute-hand"
           style={{ transform: `translate(-50%, -100%) rotate(${minuteAngle}deg)` }}
-          onMouseDown={(e) => handleMouseDown("minute")}
-          onTouchStart={(e) => handleMouseDown("minute")}
+          onMouseDown={() => handleMouseDown("minute")}
+          onTouchStart={() => handleMouseDown("minute")}
         />
         {feedback && (
           <div className={`feedback ${feedbackType}`}>
@@ -237,7 +249,6 @@ function App() {
         )}
       </div>
       
-      {/* Mål-tiden visas både digitalt och med svensk texttolkning */}
       <div className="target-time">
         {formatSwedishTime(targetTime)} ({targetTime})
       </div>
