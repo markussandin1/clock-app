@@ -69,15 +69,16 @@ html, body {
 /* Klock-container: en mindre cirkel på mobil */
 .clock-container {
   position: relative;
-  width: 80vw;          /* 80% av skärmens bredd */
-  max-width: 300px;     /* men aldrig mer än 300px */
+  width: 80vw;
+  max-width: 300px;
   height: 80vw;
   max-height: 300px;
   margin: 0 auto 1rem auto;
   border: 4px solid #333;
   border-radius: 50%;
   background-color: #fff;
-  overflow: hidden;     /* om något sticker ut */
+  overflow: hidden;
+  touch-action: none; /* Hindrar scroll/zoom under drag */
 }
 
 /* Klockans siffror: mindre storlek så de inte överlappar */
@@ -99,6 +100,7 @@ html, body {
   top: 50%;
   transform-origin: 50% 100%;
   cursor: pointer;
+  touch-action: none; /* Förhindrar standard touch-beteende */
 }
 
 .hour-hand {
@@ -250,4 +252,78 @@ html, body {
     font-size: 1.4rem;
     margin-top: 1.5rem;
   }
+}
+
+/* ----- STÖRRE SKÄRMAR (DESKTOP) ----- */
+@media (min-width: 1024px) {
+  .App {
+    max-width: 900px;
+    padding: 3rem;
+  }
+  
+  .title {
+    font-size: 3rem;
+  }
+  
+  .level-selector button {
+    font-size: 1.6rem;
+    padding: 1rem 2rem;
+    margin: 0 1rem;
+  }
+  
+  .clock-container {
+    width: 600px;
+    height: 600px;
+    border-width: 8px;
+    margin-bottom: 2rem;
+  }
+  
+  .clock-number {
+    font-size: 2rem; /* Justera efter behov */
+    max-width: none;
+  }
+  
+  .hour-hand {
+    width: 12px;
+    height: 80px;
+  }
+  
+  .minute-hand {
+    width: 8px;
+    height: 130px;
+  }
+  
+  .target-time {
+    font-size: 2.5rem;
+    margin: 2rem 0;
+  }
+  
+  .confirm-button {
+    font-size: 2rem;
+    padding: 1.25rem 2.5rem;
+    margin-top: 1.5rem;
+  }
+  
+  .feedback {
+    font-size: 2rem;
+    padding: 1.5rem 2.5rem;
+  }
+  
+  .star-counter {
+    font-size: 2rem;
+    margin-top: 2rem;
+  }
+}
+.hour-hand::before,
+.minute-hand::before {
+  content: "";
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  right: -15px;
+  bottom: -15px;
+  /* Vi lämnar bakgrunden transparent */
+  background-color: transparent;
+  /* Låt pseudo-elementet vara klickbart */
+  pointer-events: auto;
 }
